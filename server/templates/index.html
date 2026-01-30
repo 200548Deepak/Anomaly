@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Binance User Stats</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.dataTables.min.css">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 30px;
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        table.dataTable thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        table.dataTable tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: #d9edf7;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            background-color: #007bff;
+            color: white !important;
+            border-radius: 4px;
+            padding: 5px 10px;
+            margin: 2px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background-color: #0056b3 !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Binance User Stats</h1>
+
+    <table id="userTable" class="display nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <th>userNo</th>
+                <th>registerDays</th>
+                <th>firstOrderDays</th>
+                <th>completedOrderNumOfLatest30day</th>
+                <th>completedBuyOrderNumOfLatest30day</th>
+                <th>completedSellOrderNumOfLatest30day</th>
+                <th>completedOrderNum</th>
+                <th>completedBuyOrderNum</th>
+                <th>completedSellOrderNum</th>
+                <th>counterpartyCount</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- jQuery + DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+
+    <script>
+        $(document).ready(async function(){
+            const res = await fetch('/api/users');
+            const data = await res.json();
+
+            $('#userTable').DataTable({
+                data: data,
+                columns: [
+                    { data: 'userNo' },
+                    { data: 'registerDays' },
+                    { data: 'firstOrderDays' },
+                    { data: 'completedOrderNumOfLatest30day' },
+                    { data: 'completedBuyOrderNumOfLatest30day' },
+                    { data: 'completedSellOrderNumOfLatest30day' },
+                    { data: 'completedOrderNum' },
+                    { data: 'completedBuyOrderNum' },
+                    { data: 'completedSellOrderNum' },
+                    { data: 'counterpartyCount' }
+                ],
+                pageLength: 50,
+                scrollX: true,
+                scrollY: '500px',
+                scrollCollapse: true,
+                deferRender: true,
+                fixedHeader: true
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,12 +5,12 @@ import pandas as pd
 # completedOrderTotalBtcAmountOfLatest30day,completedOrderNum,completedBuyOrderNum,completedSellOrderNum,
 # completedBuyOrderTotalBtcAmount,completedSellOrderTotalBtcAmount,completedOrderTotalBtcAmount,counterpartyCount
 
-df = pd.read_csv("user_stats_output.csv")
+df = pd.read_csv("user_details_output2.csv")
 
 filtered = df[
-    (df['registerDays'] >= 50) &
-    (df['completedBuyOrderNum'] >= 0) &
-    (df['completedSellOrderNum'] <= 0 ) &
+    (df['registerDays'] >= 100) &
+    (df['completedOrderNum'] >= 10000) &
+    (df['completedSellOrderNum'] >= 0 ) &
     (df['counterpartyCount'] >= 0 )
 ]
 

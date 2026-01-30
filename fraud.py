@@ -8,7 +8,7 @@ def get_user(user_name):
     user_stats = data["data"]["userDetailVo"].get("userStatsRet", {})
 
     cols_to_show = [
-    'registerDays',
+    'firstOrderDays',
     'completedBuyOrderNum',
     'completedSellOrderNum',
     'counterpartyCount',
