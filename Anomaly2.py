@@ -1,7 +1,7 @@
 import csv
 import requests
 import pandas as pd
-import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def Anomaly_points(user_name):
     points = 0
@@ -11,91 +11,113 @@ def Anomaly_points(user_name):
         response = requests.get(API_URL, timeout=10)
         data = response.json()
         user_stats = data["data"]["userDetailVo"].get("userStatsRet", {})
-    except Exception as e:
-        print(f"Error fetching {user_name}: {e}")
-        return False
+    except:
+        return None
     
-    # Example scoring logic (your original code)
-    if user_stats['completedSellOrderNum']==0:
-            points+=10  
-
+    if user_stats.get('completedSellOrderNum', 0) == 0:
+        points += 10  
     else:
-        buy_sell_ratio=user_stats['completedBuyOrderNum']/user_stats['completedSellOrderNum']
+        buy_sell_ratio = user_stats.get('completedBuyOrderNum', 0) / max(user_stats.get('completedSellOrderNum', 1), 1)
         if buy_sell_ratio >= 8:
-            points+=10
+            points += 10
             
-    day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
-    if day_avg > 2 and day_avg < 3:
-        points+=20
+    day_avg = user_stats.get('completedBuyOrderNum', 0) / max(user_stats.get('registerDays', 1), 1)
+    if 2 < day_avg < 3:
+        points += 20
     elif day_avg >= 3:
-         points += 30
+        points += 30
 
-    if user_stats['completedBuyOrderNumOfLatest30day'] >=60 and user_stats['completedBuyOrderNumOfLatest30day'] < 90:
-         points += 20
-    elif user_stats['completedBuyOrderNumOfLatest30day'] >=90:
-         points += 30
+    completed_last_30 = user_stats.get('completedBuyOrderNumOfLatest30day', 0)
+    if 60 <= completed_last_30 < 90:
+        points += 20
+    elif completed_last_30 >= 90:
+        points += 30
 
-    if user_stats['counterpartyCount']==0:
-            count_party_avg2=0
+    counterparty = user_stats.get('counterpartyCount', 0)
+    if counterparty == 0:
+        count_party_avg2 = 0
     else:
-        count_party_avg2=user_stats['completedOrderNum']/user_stats['counterpartyCount']
-    if count_party_avg2 > 2 and count_party_avg2 < 2.5:
-            points+=10
-    elif count_party_avg2 >= 2.5 and count_party_avg2 < 3:
-            points+=15
-    elif count_party_avg2 >= 3 and count_party_avg2 < 4:
-            points+=20
+        count_party_avg2 = user_stats.get('completedOrderNum', 0) / counterparty
+    
+    if 2 < count_party_avg2 < 2.5:
+        points += 10
+    elif 2.5 <= count_party_avg2 < 3:
+        points += 15
+    elif 3 <= count_party_avg2 < 4:
+        points += 20
     elif count_party_avg2 >= 4:
-            points+=30
+        points += 30
 
-    return points > 30
+    return points
 
 # -------------------------
-# Resume logging
+# Load users and logs
 # -------------------------
-
 user_file = 'unique_user_names.csv'
-log_file = 'anomaly_log3.csv'
+log_file = 'anomaly_log4.csv'
 
-# Load all users
 df_users = pd.read_csv(user_file)
 all_users = df_users['user_name'].tolist()
 
-# Load existing log if exists
 try:
     df_log = pd.read_csv(log_file)
     processed_users = set(df_log['user_name'].tolist())
 except FileNotFoundError:
-    # No log yet
-    df_log = pd.DataFrame(columns=['user_name', 'anomaly_flag'])
+    df_log = pd.DataFrame(columns=['user_name', 'points', 'anomaly_flag'])
     processed_users = set()
 
-# Open log file in append mode
-with open(log_file, 'a', newline='', encoding='utf-8') as f:
-    writer = csv.writer(f)
+# Filter out already processed users
+users_to_process = [u for u in all_users if u not in processed_users]
+
+batch_rows = []
+anomaly_count = df_log['anomaly_flag'].sum() if not df_log.empty else 0
+processed_count = 0
+
+# -------------------------
+# Parallel fetching
+# -------------------------
+MAX_THREADS = 30  # adjust depending on your network/API limits
+
+with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    future_to_user = {executor.submit(Anomaly_points, user): user for user in users_to_process}
     
-    # If file was empty, write header
-    if f.tell() == 0:
-        writer.writerow(['user_name', 'anomaly_flag'])
-
-    anomaly_users = df_log['anomaly_flag'].sum() if not df_log.empty else 0
-
-    # Loop over users and skip already processed
-    for user in all_users:
-        if user in processed_users:
-            continue  # skip already processed
+    for future in as_completed(future_to_user):
+        user = future_to_user[future]
+        points = future.result()
+        if points is None:
+            continue
         
-        is_anomaly = Anomaly_points(user)
-        if is_anomaly:
-            anomaly_users += 1
-            print(f"{user} --> Anomaly #{anomaly_users}")
+        anomaly_flag = points > 30
+        if anomaly_flag:
+            anomaly_count += 1
         
-        # Write to log
-        writer.writerow([user, is_anomaly])
-        
-        # Optional: avoid API throttling
-        #time.sleep(0.2)
+        batch_rows.append([user, points, anomaly_flag])
+        processed_count += 1
 
-total_users = len(all_users)
+        # Save every 100 users
+        if processed_count % 100 == 0:
+            with open(log_file, 'a', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                if f.tell() == 0:
+                    writer.writerow(['user_name', 'points', 'anomaly_flag'])
+                writer.writerows(batch_rows)
+            batch_rows = []
+            print(f"✅ Saved {processed_count} users to CSV file...")
+
+# Save remaining users
+if batch_rows:
+    with open(log_file, 'a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if f.tell() == 0:
+            writer.writerow(['user_name', 'points', 'anomaly_flag'])
+        writer.writerows(batch_rows)
+    print(f"✅ Saved final batch of {len(batch_rows)} users to CSV file.")
+
+# -------------------------
+# Final stats
+# -------------------------
+df_log = pd.read_csv(log_file)
+anomaly_users = (df_log['anomaly_flag'] == True).sum()
+total_users = len(df_log)
 percent = (anomaly_users / total_users) * 100
 print(f"Processing complete! Anomaly percentage: {percent:.2f}%")

@@ -39,11 +39,11 @@ def Anomaly_points(user_name):
         count_party_avg2=user_stats['completedOrderNum']/user_stats['counterpartyCount']
     if count_party_avg2 > 2 and count_party_avg2 < 2.5:
             points+=10
-    elif count_party_avg2 > 2.5 and count_party_avg2 < 3:
+    elif count_party_avg2 >= 2.5 and count_party_avg2 < 3:
             points+=15
-    elif count_party_avg2 > 3 and count_party_avg2 < 4:
+    elif count_party_avg2 >= 3 and count_party_avg2 < 4:
             points+=20
-    elif count_party_avg2 > 4:
+    elif count_party_avg2 >= 4:
             points+=30
 
     return points > 30
