@@ -16,14 +16,15 @@ def Anomaly_points(user_name):
     # Example scoring logic (your original code)
     if user_stats['completedSellOrderNum']==0:
             points+=10  
-
     else:
         buy_sell_ratio=user_stats['completedBuyOrderNum']/user_stats['completedSellOrderNum']
         if buy_sell_ratio >= 8:
             points+=10
-            
-    day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
-    if day_avg > 2 and day_avg < 3:
+    if user_stats['registerDays'] == 0:
+        day_avg = 0
+    else:        
+        day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
+    if day_avg >= 2 and day_avg < 3:
         points+=20
     elif day_avg >= 3:
          points += 30
@@ -34,10 +35,10 @@ def Anomaly_points(user_name):
          points += 30
 
     if user_stats['counterpartyCount']==0:
-            count_party_avg2=0
+        count_party_avg2=0
     else:
         count_party_avg2=user_stats['completedOrderNum']/user_stats['counterpartyCount']
-    if count_party_avg2 > 2 and count_party_avg2 < 2.5:
+    if count_party_avg2 >= 2 and count_party_avg2 < 2.5:
             points+=10
     elif count_party_avg2 >= 2.5 and count_party_avg2 < 3:
             points+=15
@@ -46,4 +47,4 @@ def Anomaly_points(user_name):
     elif count_party_avg2 >= 4:
             points+=30
 
-    return points > 30
+    return points > 40
