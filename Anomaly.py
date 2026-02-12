@@ -25,14 +25,12 @@ def Anomaly_points(user_name):
     else:        
         day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
     if day_avg >= 2 and day_avg < 3:
-        points+=20
+        points+=30
     elif day_avg >= 3:
-         points += 30
+         points += 40
 
-    if user_stats['completedBuyOrderNumOfLatest30day'] >=60 and user_stats['completedBuyOrderNumOfLatest30day'] < 90:
-         points += 20
-    elif user_stats['completedBuyOrderNumOfLatest30day'] >=90:
-         points += 30
+    if user_stats['completedBuyOrderNumOfLatest30day'] >=60:
+         points += 40
 
     if user_stats['counterpartyCount']==0:
         count_party_avg2=0
@@ -47,4 +45,4 @@ def Anomaly_points(user_name):
     elif count_party_avg2 >= 4:
             points+=30
 
-    return points > 40
+    return points >= 40
