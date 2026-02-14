@@ -10,7 +10,7 @@ cursor.execute("SELECT DISTINCT user_name FROM orders")
 rows = cursor.fetchall()
 
 # Write to CSV
-with open('orders_output.csv', 'w', newline='') as csvfile:
+with open('Users_names.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     
     # Write header row (optional)

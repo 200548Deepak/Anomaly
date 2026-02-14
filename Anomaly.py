@@ -21,29 +21,32 @@ def Anomaly_points(user_name):
         buy_sell_ratio=user_stats['completedBuyOrderNum']/user_stats['completedSellOrderNum']
         if buy_sell_ratio >= 8:
             points+=10
-            
-    day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
+
+    if user_stats['registerDays'] == 0:
+            day_avg=0
+    else:  
+        day_avg = user_stats['completedBuyOrderNum']/user_stats['registerDays']
     if day_avg > 2 and day_avg < 3:
         points+=20
     elif day_avg >= 3:
          points += 30
 
     if user_stats['completedBuyOrderNumOfLatest30day'] >=60 and user_stats['completedBuyOrderNumOfLatest30day'] < 90:
-         points += 20
-    elif user_stats['completedBuyOrderNumOfLatest30day'] >=90:
          points += 30
+    elif user_stats['completedBuyOrderNumOfLatest30day'] >=90:
+         points += 40
 
     if user_stats['counterpartyCount']==0:
             count_party_avg2=0
     else:
         count_party_avg2=user_stats['completedOrderNum']/user_stats['counterpartyCount']
     if count_party_avg2 > 2 and count_party_avg2 < 2.5:
-            points+=10
-    elif count_party_avg2 >= 2.5 and count_party_avg2 < 3:
             points+=15
-    elif count_party_avg2 >= 3 and count_party_avg2 < 4:
+    elif count_party_avg2 >= 2.5 and count_party_avg2 < 3:
             points+=20
-    elif count_party_avg2 >= 4:
+    elif count_party_avg2 >= 3 and count_party_avg2 < 4:
             points+=30
+    elif count_party_avg2 >= 4:
+            points+=40
 
-    return points > 30
+    return points >=30 
