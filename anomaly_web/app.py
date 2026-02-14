@@ -43,7 +43,9 @@ def anomaly_points(user_stats):
             column_flags['completedSellOrderNum'] = True
 
     # 2. Orders per day since registration
-    if user_stats['registerDays'] > 0:
+    if user_stats['registerDays'] == 0:
+        day_avg = 0
+    else:
         day_avg = user_stats['completedBuyOrderNum'] / user_stats['registerDays']
         if 2 < day_avg < 3:
             points += 20
@@ -57,10 +59,10 @@ def anomaly_points(user_stats):
     # 3. Last 30 days activity
     buy_30 = user_stats['completedBuyOrderNumOfLatest30day']
     if 60 <= buy_30 < 90:
-        points += 20
+        points += 30
         column_flags['completedBuyOrderNumOfLatest30day'] = True
     elif buy_30 >= 90:
-        points += 30
+        points += 40
         column_flags['completedBuyOrderNumOfLatest30day'] = True
 
     # 4. Counterparty concentration
@@ -70,23 +72,23 @@ def anomaly_points(user_stats):
         avg = user_stats['completedOrderNum'] / user_stats['counterpartyCount']
 
     if 2 < avg < 2.5:
-        points += 10
-        column_flags['completedOrderNum'] = True
-        column_flags['counterpartyCount'] = True
-    elif 2.5 < avg < 3:
         points += 15
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
-    elif 3 <= avg < 4:
+    elif 2.5 < avg < 3:
         points += 20
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
-    elif avg >= 4:
+    elif 3 <= avg < 4:
         points += 30
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
+    elif avg >= 4:
+        points += 40
+        column_flags['completedOrderNum'] = True
+        column_flags['counterpartyCount'] = True
 
-    return points, points > 30, column_flags
+    return points, points >= 30, column_flags
 
 # -------------------------
 # Fetch user data from Binance API

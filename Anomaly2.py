@@ -29,9 +29,9 @@ def Anomaly_points(user_name):
 
     completed_last_30 = user_stats.get('completedBuyOrderNumOfLatest30day', 0)
     if 60 <= completed_last_30 < 90:
-        points += 20
-    elif completed_last_30 >= 90:
         points += 30
+    elif completed_last_30 >= 90:
+        points += 40
 
     counterparty = user_stats.get('counterpartyCount', 0)
     if counterparty == 0:
@@ -40,13 +40,13 @@ def Anomaly_points(user_name):
         count_party_avg2 = user_stats.get('completedOrderNum', 0) / counterparty
     
     if 2 < count_party_avg2 < 2.5:
-        points += 10
-    elif 2.5 <= count_party_avg2 < 3:
         points += 15
-    elif 3 <= count_party_avg2 < 4:
+    elif 2.5 <= count_party_avg2 < 3:
         points += 20
-    elif count_party_avg2 >= 4:
+    elif 3 <= count_party_avg2 < 4:
         points += 30
+    elif count_party_avg2 >= 4:
+        points += 40
 
     return points
 
@@ -54,7 +54,7 @@ def Anomaly_points(user_name):
 # Load users and logs
 # -------------------------
 user_file = 'unique_user_names.csv'
-log_file = 'anomaly_log4.csv'
+log_file = 'anomaly_log5.csv'
 
 df_users = pd.read_csv(user_file)
 all_users = df_users['user_name'].tolist()
@@ -87,7 +87,7 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         if points is None:
             continue
         
-        anomaly_flag = points > 30
+        anomaly_flag = points > 40
         if anomaly_flag:
             anomaly_count += 1
         

@@ -3,10 +3,10 @@ import requests
 import time
 
 # Input CSV with user_name column
-INPUT_CSV = "orders_output.csv"
+INPUT_CSV = "unique_users_names2.csv"
 
 # Output CSV file
-OUTPUT_CSV = "user_stats_output.csv"
+OUTPUT_CSV = "unique_users_details3.csv"
 
 # Binance API URL template
 API_URL = "https://c2c.binance.com/bapi/c2c/v2/friendly/c2c/user/profile-and-ads-list?userNo={}"
