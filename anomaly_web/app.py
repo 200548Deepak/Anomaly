@@ -72,15 +72,15 @@ def anomaly_points(user_stats):
         avg = user_stats['completedOrderNum'] / user_stats['counterpartyCount']
 
     if 2 < avg < 2.5:
-        points += 15
+        points += 10
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
     elif 2.5 < avg < 3:
-        points += 20
+        points += 15
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
     elif 3 <= avg < 4:
-        points += 30
+        points += 25
         column_flags['completedOrderNum'] = True
         column_flags['counterpartyCount'] = True
     elif avg >= 4:

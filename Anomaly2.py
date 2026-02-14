@@ -1,13 +1,35 @@
 import csv
+import threading
+import time
 import requests
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
+RATE_LIMIT_PER_SEC = 5
+
+
+class RateLimiter:
+    def __init__(self, rate_per_sec):
+        self._interval = 1.0 / max(rate_per_sec, 1)
+        self._lock = threading.Lock()
+        self._next_allowed = 0.0
+
+    def wait(self):
+        with self._lock:
+            now = time.monotonic()
+            if now < self._next_allowed:
+                time.sleep(self._next_allowed - now)
+            self._next_allowed = time.monotonic() + self._interval
+
+
+rate_limiter = RateLimiter(RATE_LIMIT_PER_SEC)
 
 def Anomaly_points(user_name):
     points = 0
     API_URL = f"https://c2c.binance.com/bapi/c2c/v2/friendly/c2c/user/profile-and-ads-list?userNo={user_name}"
     
     try:
+        rate_limiter.wait()
         response = requests.get(API_URL, timeout=10)
         data = response.json()
         user_stats = data["data"]["userDetailVo"].get("userStatsRet", {})
@@ -20,12 +42,14 @@ def Anomaly_points(user_name):
         buy_sell_ratio = user_stats.get('completedBuyOrderNum', 0) / max(user_stats.get('completedSellOrderNum', 1), 1)
         if buy_sell_ratio >= 8:
             points += 10
-            
-    day_avg = user_stats.get('completedBuyOrderNum', 0) / max(user_stats.get('registerDays', 1), 1)
+    if user_stats.get('registerDays', 0) == 0:
+        day_avg = 0
+    else:
+        day_avg = user_stats.get('completedBuyOrderNum', 0) / max(user_stats.get('registerDays', 1), 1)
     if 2 < day_avg < 3:
-        points += 20
-    elif day_avg >= 3:
         points += 30
+    elif day_avg >= 3:
+        points += 40
 
     completed_last_30 = user_stats.get('completedBuyOrderNumOfLatest30day', 0)
     if 60 <= completed_last_30 < 90:
@@ -40,11 +64,11 @@ def Anomaly_points(user_name):
         count_party_avg2 = user_stats.get('completedOrderNum', 0) / counterparty
     
     if 2 < count_party_avg2 < 2.5:
-        points += 15
+        points += 10
     elif 2.5 <= count_party_avg2 < 3:
-        points += 20
+        points += 15
     elif 3 <= count_party_avg2 < 4:
-        points += 30
+        points += 25
     elif count_party_avg2 >= 4:
         points += 40
 
@@ -53,8 +77,8 @@ def Anomaly_points(user_name):
 # -------------------------
 # Load users and logs
 # -------------------------
-user_file = 'unique_user_names.csv'
-log_file = 'anomaly_log5.csv'
+user_file = 'Users_names.csv'
+log_file = 'anomaly_log6.csv'
 
 df_users = pd.read_csv(user_file)
 all_users = df_users['user_name'].tolist()
@@ -87,7 +111,7 @@ with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         if points is None:
             continue
         
-        anomaly_flag = points > 40
+        anomaly_flag = points >= 40
         if anomaly_flag:
             anomaly_count += 1
         
